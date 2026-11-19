@@ -1,0 +1,327 @@
+
+
+<!DOCTYPE html>
+
+<html lang="fr">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>StudyFlow</title>
+
+<style>
+
+* { box-sizing: border-box; }
+
+body {
+
+  margin: 0;
+
+  font-family: Arial, sans-serif;
+
+  background: #f4f6fb;
+
+  color: #20283b;
+
+  padding: 24px;
+
+}
+
+.container { max-width: 650px; margin: auto; }
+
+header { margin-bottom: 30px; }
+
+header h1 { font-size: 30px; margin-bottom: 5px; }
+
+header p { color: #718096; }
+
+.card {
+
+  background: white;
+
+  border-radius: 16px;
+
+  padding: 20px;
+
+  margin-bottom: 18px;
+
+  box-shadow: 0 3px 15px #1725540c;
+
+}
+
+.stats { display: flex; gap: 12px; }
+
+.stat { flex: 1; }
+
+.stat strong { font-size: 27px; display: block; }
+
+input, select {
+
+  width: 100%;
+
+  padding: 13px;
+
+  margin: 7px 0;
+
+  border: 1px solid #dce1eb;
+
+  border-radius: 9px;
+
+  font-size: 15px;
+
+  background: white;
+
+}
+
+button {
+
+  border: 0;
+
+  border-radius: 9px;
+
+  padding: 13px 18px;
+
+  background: #5369e8;
+
+  color: white;
+
+  font-size: 15px;
+
+  cursor: pointer;
+
+}
+
+.task {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+  border-bottom: 1px solid #edf0f5;
+
+  padding: 13px 0;
+
+}
+
+.task.done .task-name {
+
+  text-decoration: line-through;
+
+  color: #999;
+
+}
+
+.task-info { flex: 1; }
+
+.task-info small { display: block; color: #8490a5; margin-top: 5px; }
+
+.delete { background: #ffe8e8; color: #bd4545; padding: 9px; }
+
+h2 { font-size: 19px; }
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<header>
+
+<h1>📚 StudyFlow</h1>
+
+<p>Ton organisation scolaire, simplement</p>
+
+</header>
+
+<div class="stats">
+
+<div class="card stat">
+
+<strong id="remaining">0</strong>
+
+À faire
+
+</div>
+
+<div class="card stat">
+
+<strong id="completed">0</strong>
+
+Terminés
+
+</div>
+
+</div>
+
+<div class="card">
+
+<h2>➕ Ajouter un devoir</h2>
+
+<input id="subject" placeholder="Matière (ex : Maths)">
+
+<input id="taskName" placeholder="Quel est ton devoir ?">
+
+<input id="date" type="date">
+
+<button onclick="addTask()">Ajouter le devoir</button>
+
+</div>
+
+<div class="card">
+
+<h2>📝 Mes devoirs</h2>
+
+<div id="tasks"></div>
+
+</div>
+
+</div>
+
+<script>
+
+let tasks = JSON.parse(localStorage.getItem("studyflow_tasks") || "[]");
+
+function save() {
+
+  localStorage.setItem("studyflow_tasks", JSON.stringify(tasks));
+
+  render();
+
+}
+
+function addTask() {
+
+  const subject = document.getElementById("subject").value.trim();
+
+  const name = document.getElementById("taskName").value.trim();
+
+  const date = document.getElementById("date").value;
+
+  if (!subject || !name || !date) {
+
+    alert("Remplis tous les champs !");
+
+    return;
+
+  }
+
+  tasks.push({
+
+    id: Date.now(),
+
+    subject,
+
+    name,
+
+    date,
+
+    done: false
+
+  });
+
+  document.getElementById("subject").value = "";
+
+  document.getElementById("taskName").value = "";
+
+  document.getElementById("date").value = "";
+
+  save();
+
+}
+
+function toggleTask(id) {
+
+  tasks = tasks.map(t =>
+
+    t.id === id ? {...t, done: !t.done} : t
+
+  );
+
+  save();
+
+}
+
+function deleteTask(id) {
+
+  tasks = tasks.filter(t => t.id !== id);
+
+  save();
+
+}
+
+function render() {
+
+  const list = document.getElementById("tasks");
+
+  list.innerHTML = "";
+
+  tasks.sort((a,b) => a.date.localeCompare(b.date));
+
+  tasks.forEach(t => {
+
+    const item = document.createElement("div");
+
+    item.className = "task" + (t.done ? " done" : "");
+
+    const check = document.createElement("input");
+
+    check.type = "checkbox";
+
+    check.checked = t.done;
+
+    check.style.width = "20px";
+
+    check.onchange = () => toggleTask(t.id);
+
+    const info = document.createElement("div");
+
+    info.className = "task-info";
+
+    const title = document.createElement("strong");
+
+    title.textContent = t.name;
+
+    const detail = document.createElement("small");
+
+    detail.textContent = t.subject + " • " + t.date;
+
+    info.append(title, detail);
+
+    const remove = document.createElement("button");
+
+    remove.className = "delete";
+
+    remove.textContent = "✕";
+
+    remove.onclick = () => deleteTask(t.id);
+
+    item.append(check, info, remove);
+
+    list.append(item);
+
+  });
+
+  document.getElementById("remaining").textContent =
+
+    tasks.filter(t => !t.done).length;
+
+  document.getElementById("completed").textContent =
+
+    tasks.filter(t => t.done).length;
+
+}
+
+render();
+
+</script>
+
+</body>
+
+</html>
